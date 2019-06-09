@@ -5,42 +5,63 @@ import 'dart:convert';
 import 'dart:async';
 
 void main() {
-  runApp(MaterialApp(
-    home: StarWarsData()
-  ));
+  runApp(MyApp());
 }
 
-class StarWarsData extends StatefulWidget{
+class MyApp extends StatelessWidget{
   @override
-  StarWarsState createState()=> StarWarsState();
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return MaterialApp(
+      title: 'Photo Streamer',
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+      ),
+      home: PhotoList()
+    );
+  }
 }
 
-class StarWarsState extends State<StarWarsData>{
-  final String url = "https://swapi.co/api/starships";
-  List  data;
-  String next="";
+class PhotoList extends StatefulWidget{
+  @override
+  PhotoListState createState() => PhotoListState();
+}
 
-  Future<String> getSwData(String link) async{
-    var linkApi = "";
-    if(link != ""){
-      linkApi = link;
-    }else{
-      linkApi = url;
-    }
-    var res = await http.get(Uri.parse(linkApi),headers: {"Accept":"application/json"});
+class PhotoListState extends State<PhotoList>{
+  StreamController<Photo> streamController;
+  List<Photo> list =[];
 
-    setState(() {
-      var resBody = json.decode(res.body);
-      if(data == null){
-        data = resBody['results'];
-      }else{
-        data.addAll(resBody['results']);
-      }
+  @override
+  void initState(){
+    super.initState();
+    streamController = StreamController.broadcast();
 
-      next = resBody['next'];
-    });
+    streamController.stream.listen((p)=> setState(()=> list.add((p))));
 
-    return "Success";
+    load(streamController);
+  }
+
+  load(StreamController<Photo> sc) async{
+    String url ="https://jsonplaceholder.typicode.com/photos";
+    var client = new http.Client();
+
+    var req = new http.Request('get', Uri.parse(url));
+
+    var streamRes = await client.send(req);
+
+    streamRes.stream
+      .transform(utf8.decoder)
+      .transform(json.decoder)
+      .expand((e)=> e)
+      .map((map)=> Photo.fromJsonMap(map))
+    .pipe(sc);
+  }
+
+  @override
+  void dispose(){
+    super.dispose();
+    streamController?.close();
+    streamController = null;
   }
 
   @override
@@ -48,69 +69,37 @@ class StarWarsState extends State<StarWarsData>{
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
-        title: Text("Star Wars Startships"),
-        backgroundColor: Colors.deepPurpleAccent
+        title: Text('Photo Streams'),
       ),
-      body: ListView.builder(
-        itemCount: data == null ?0:data.length,
-        itemBuilder: (BuildContext context,int index){
-          if(index > data.length -2 ){
-
-            this.getSwData(next);
-          }
-          return Container(
-            child: Center(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Card(
-                    child: Container(
-                      padding: EdgeInsets.all(15.0),
-                      child: Row(
-                        children: <Widget>[
-                          Text("Name: "),
-                          Text(data[index]['name'],style: TextStyle(fontSize: 18.0,color: Colors.black87)),
-
-                        ],
-                      ),
-                    ),
-                  ),
-                  Card(
-                    child: Container(
-                      padding: EdgeInsets.all(15.0),
-                      child: Row(
-                        children: <Widget>[
-                          Text("Model: "),
-                          Text(data[index]['model'],style: TextStyle(fontSize: 18.0,color: Colors.black87)),
-
-                        ],
-                      ),
-                    ),
-                  ),
-                  Card(
-                    child: Container(
-                      padding: EdgeInsets.all(15.0),
-                      child: Row(
-                        children: <Widget>[
-                          Text("Cargo_Capacity: "),
-                          Text(data[index]['cargo_capacity'],style: TextStyle(fontSize: 18.0,color: Colors.black87)),
-
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+      body: Center(
+        child: ListView.builder(
+          itemBuilder: (BuildContext context,int index) => _makeElement(index),
+        ),
       ),
     );
   }
 
-  @override
-  void initState(){
-    super.initState();
-    this.getSwData("");
+  Widget _makeElement(int index){
+    if(index >= list.length){
+      return null;
+    }
+
+    return Container(
+      child: Center(
+        child: Column(
+          children: <Widget>[
+            Image.network(list[index].url),
+            Text(index.toString() + ":" +list[index].title)
+          ],
+        ),
+      ),
+    );
   }
+}
+
+
+class Photo{
+  final String title;
+  final String url;
+  Photo.fromJsonMap(Map map) : title = map['title'],url = map['url'];
 }
