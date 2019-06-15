@@ -8,136 +8,114 @@ void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatefulWidget {
- MyAppState createState() =>MyAppState();
-}
-
-class MyAppState extends State<MyApp> with SingleTickerProviderStateMixin{
-  TabController tabController;
-
-  @override
-  void initState(){
-    super.initState();
-    tabController = TabController(length: 2,vsync: this);
-  }
-
-  @override
-  void dispose(){
-    tabController.dispose();
-    super.dispose();
-  }
-
-  TabBar makeTabBar(){
-    return TabBar(tabs: <Tab>[
-      Tab(
-        icon: Icon(Icons.home),
-      ),
-      Tab(
-        icon: Icon(Icons.settings_power),
-      )
-    ],controller: tabController,);
-  }
-
-  TabBarView makeTabBarView(tabs){
-    return TabBarView(
-      children: tabs,
-      controller: tabController,
-    );
-  }
-
+class MyApp extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text("My app"),
-          backgroundColor: Colors.deepPurpleAccent,
-          bottom: makeTabBar(),
+        title: 'Form SignUp',
+        theme: ThemeData(
+          primarySwatch: Colors.indigo,
         ),
-        body: makeTabBarView(<Widget>[TheGridView().build(),SimpleWidget()])
-      ),
-    );
+        home: InputBox(),
+      );
   }
 }
 
-
-
-class SimpleWidget extends StatefulWidget{
+class InputBox extends StatefulWidget{
   @override
-  SimpleWidgetState createState()=> SimpleWidgetState();
+  InputBoxState createState() => InputBoxState();
 }
 
-class SimpleWidgetState extends State<SimpleWidget>{
-  int stepCounter = 0;
-  List<Step> steps = [
-    Step(title: Text("Steap one"), content: Text("This is first step"),isActive: true),
-    Step(title: Text("Step two"),content: Text("This is step two"),isActive: true),
-    Step(title: Text("Step three"),content: Text("This is step three"),isActive: true)
-  ];
+class InputBoxState extends State<InputBox>{
+  bool loggedIn = false;
+  String _email, _userName, _password;
+
+  final formKey = GlobalKey<FormState>();
+  final mainKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    return Container(
-      child: Stepper(
-        currentStep: this.stepCounter,
-        steps: steps,
-        type: StepperType.vertical,
-        onStepTapped: (step){
-          setState(() {
-            stepCounter = step;
-          });
-        },
-        onStepCancel: (){
-          setState(() {
-            stepCounter > 0 ? stepCounter -=1: stepCounter;
-          });
-    },onStepContinue: (){
-          setState(() {
-            stepCounter <steps.length-1?stepCounter +=1:stepCounter =0;
-          });
-    },
+    return Scaffold(
+      key: mainKey,
+      appBar: AppBar(title: Text('Form SignUp')),
+      body: Padding(
+          padding: EdgeInsets.all(10.0),
+        child: loggedIn == false?
+        Form(
+          key: formKey,
+          child: Column(
+            children: <Widget>[
+              TextFormField(
+                autocorrect: false,
+                decoration: InputDecoration(
+                  labelText: "Email"
+                ),
+                validator: (str)=> !str.contains('@')?'Valid Email':null,
+                onSaved: (str) => _email = str,
+              ),
+              TextFormField(
+                autocorrect: false,
+                decoration: InputDecoration(
+                    labelText: "UserName"
+                ),
+                validator: (str)=> str.length < 6?'Valid UserName':null,
+                onSaved: (str) => _userName = str,
+              ),TextFormField(
+                autocorrect: false,
+                obscureText: true,
+                decoration: InputDecoration(
+                    labelText: "Password"
+                ),
+                validator: (str)=> !str.contains('@')?'Valid Password':null,
+                onSaved: (str) => _password = str,
+              ),
+              RaisedButton(
+                color: Colors.blueAccent,
+                child: Text('Sign In'),
+                onPressed: onPresseForm,
+
+              )
+            ],
+          ),
+        ): Center(
+          child: Column(
+            children: <Widget>[
+              Text("Welcome $_userName"),
+              RaisedButton(
+                color: Colors.deepOrange,
+                child: Text("Log out"),
+                onPressed: (){
+                  setState(() {
+                    loggedIn =false;
+                  });
+                },
+              )
+            ],
+          ),
+        ),
       ),
     );
   }
 
-}
+  void onPresseForm(){
+    var form = formKey.currentState;
 
+    if(form.validate()){
+      form.save();
+      setState(() {
+        loggedIn =true;
+      });
 
-class TheGridView {
-  Card makeGridCell(String name, IconData icon) {
-    return Card(
-      elevation: 1.0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        verticalDirection: VerticalDirection.down,
-        children: <Widget>[
-          Center(child: Icon(icon)),
-          Text(name),
-        ],
-      ),
-    );
-  }
+      var snackBar = SnackBar(
+        content:
+        Text('Username: $_userName, Email: $_email, Password: $_password'),
+        duration: Duration(milliseconds: 5000),
+      );
 
-  GridView build() {
-    return GridView.count(
-      primary: true,
-      padding: EdgeInsets.all(1.0),
-      crossAxisCount: 2,
-      childAspectRatio: 1.0,
-      mainAxisSpacing: 1.0,
-      crossAxisSpacing: 1.0,
-      children: <Widget>[
-        makeGridCell("Home", Icons.home),
-        makeGridCell("Email", Icons.email),
-        makeGridCell("Chat", Icons.chat),
-        makeGridCell("News", Icons.new_releases),
-        makeGridCell("NetWord", Icons.network_wifi),
-        makeGridCell("Options", Icons.settings),
+      mainKey.currentState.showSnackBar(snackBar);
+    }
 
-      ],
-    );
   }
 }
