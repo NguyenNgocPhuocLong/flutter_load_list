@@ -1,66 +1,135 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/animation.dart';
 
-void main() {
-  runApp(MyApp());
-}
+void main() => runApp(MyApp());
 
-class MyApp extends StatefulWidget{
+class MyApp extends StatelessWidget {
   @override
-  MyAppState createState() => MyAppState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      theme: ThemeData(primarySwatch: Colors.green),
+      home: TempApp(),
+    );
+  }
 }
 
-class MyAppState extends State<MyApp> with SingleTickerProviderStateMixin{
-  Animation animation;
-  AnimationController animationController;
+class TempApp extends StatefulWidget {
+  @override
+  TempState createState() => TempState();
+}
+
+class TempState extends State<TempApp> {
+  double input;
+  double output;
+  bool fOrC;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    animationController = AnimationController(
-      duration: Duration(seconds: 5),vsync: this
-    );
-
-    animation = Tween(begin: 0.0,end: 500.0).animate(animationController);
-    animation.addStatusListener((status){
-      if(status == AnimationStatus.completed){
-        animationController.reverse();
-      }else if(status == AnimationStatus.dismissed){
-        animationController.forward();
-      }
-    });
-
-    animationController.forward();
+    input = 0.0;
+    output = 0.0;
+    fOrC = true;
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-    return  LogoAnimation(
-      animation: animation,
+    TextField inputField = TextField(
+      keyboardType: TextInputType.number,
+      onChanged: (str) {
+        try {
+          input = double.parse(str);
+        } catch (err) {
+          input = 0.0;
+        }
+      },
+      decoration: InputDecoration(
+        labelText: "Input a value in ${!fOrC ? "Fahrenheit" : "Celsius"}",
+      ),
+      textAlign: TextAlign.center,
     );
-  }
 
-  @override
-  void dispose(){
-    animationController.dispose();
-    super.dispose();
-  }
-}
+    AppBar appBar = AppBar(
+      title: Text("Temperature Calculator"),
+    );
 
-class LogoAnimation extends AnimatedWidget{
-  LogoAnimation({Key key,Animation animation}) :super(key:key,listenable:animation);
+    Container tempSwitch = Container(
+      padding: EdgeInsets.all(15.0),
+      child: Row(
+        children: <Widget>[
+          //use switch
+          //Text("Choose Fahrenheit or Celsius"),
+          //Switch(
+          //  value: fOrC,
+          //  onChanged: (e) {
+          //    setState(() {
+          //      fOrC = !fOrC;
+          //    });
+          //  },
+          //)
 
-  @override
-  Widget build(BuildContext context) {
+          //Checkbox(
+          //  value: fOrC,
+          //  onChanged: (e) {
+          //    setState(() {
+          //      fOrC = !fOrC;
+          //    });
+          //  },
+//),
+
+          Text("F"),
+          Radio<bool>(
+            groupValue: fOrC,
+            value: false,
+            onChanged: (v) {
+              setState(() {
+                fOrC = v;
+              });
+            },
+          ),
+          Text("C"),
+          Radio<bool>(
+            groupValue: fOrC,
+            value: true,
+            onChanged: (v) {
+              setState(() {
+                fOrC = v;
+              });
+            },
+          ),
+        ],
+      ),
+    );
+
+    Container calcBtn = Container(
+      child: RaisedButton(
+        child: Text("Calculate"),
+        onPressed: () {
+          setState(() {
+            !fOrC
+                ? output = (input - 32) * (5 / 9)
+                : output = (input * 9 / 5) + 32;
+          });
+          AlertDialog dialog = AlertDialog(
+              content: !fOrC
+                  ? Text(
+                  "${input.toStringAsFixed(2)} F: ${output.toStringAsFixed(
+                      2)} C ")
+                  : Text(
+                  "${output.toStringAsFixed(2)} F: ${input.toStringAsFixed(
+                      2)} C"));
+          showDialog(context: context, child: dialog);
+        },
+      ),
+    );
+
     // TODO: implement build
-    Animation animation = listenable;
-    return Center(
-      child: Container(
-        height: animation.value,
-        width: animation.value,
-        child: FlutterLogo(),
+    return Scaffold(
+      appBar: appBar,
+      body: Container(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          children: <Widget>[inputField, tempSwitch, calcBtn],
+        ),
       ),
     );
   }
