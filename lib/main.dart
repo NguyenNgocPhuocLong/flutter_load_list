@@ -1,135 +1,92 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
-void main() => runApp(MyApp());
+void main() =>
+    runApp(MaterialApp(
+      title: "Random Squares",
+      home: MyApp(),
+    ));
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: ThemeData(primarySwatch: Colors.green),
-      home: TempApp(),
-    );
-  }
+  AppState createState() => AppState();
 }
 
-class TempApp extends StatefulWidget {
-  @override
-  TempState createState() => TempState();
-}
+class AppState extends State<MyApp> {
+  final Random _random = Random();
+  Color color = Colors.amber;
 
-class TempState extends State<TempApp> {
-  double input;
-  double output;
-  bool fOrC;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    input = 0.0;
-    output = 0.0;
-    fOrC = true;
+  void onTap() {
+    setState(() {
+      color = Color.fromARGB(
+        _random.nextInt(256),
+        _random.nextInt(256),
+        _random.nextInt(256),
+        _random.nextInt(256),
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    TextField inputField = TextField(
-      keyboardType: TextInputType.number,
-      onChanged: (str) {
-        try {
-          input = double.parse(str);
-        } catch (err) {
-          input = 0.0;
-        }
-      },
-      decoration: InputDecoration(
-        labelText: "Input a value in ${!fOrC ? "Fahrenheit" : "Celsius"}",
-      ),
-      textAlign: TextAlign.center,
+    // TODO: implement build
+    return ColorState(
+      color: color,
+      onTap: onTap,
+      child: BoxTree(),
     );
+  }
+}
 
-    AppBar appBar = AppBar(
-      title: Text("Temperature Calculator"),
-    );
+class ColorState extends InheritedWidget {
+  ColorState({Key key, this.color, this.onTap, Widget child})
+      : super(key: key, child: child);
 
-    Container tempSwitch = Container(
-      padding: EdgeInsets.all(15.0),
-      child: Row(
-        children: <Widget>[
-          //use switch
-          //Text("Choose Fahrenheit or Celsius"),
-          //Switch(
-          //  value: fOrC,
-          //  onChanged: (e) {
-          //    setState(() {
-          //      fOrC = !fOrC;
-          //    });
-          //  },
-          //)
+  final Color color;
+  final Function onTap;
 
-          //Checkbox(
-          //  value: fOrC,
-          //  onChanged: (e) {
-          //    setState(() {
-          //      fOrC = !fOrC;
-          //    });
-          //  },
-//),
+  @override
+  bool updateShouldNotify(ColorState oldWidget) {
+    // TODO: implement ==
+    print(oldWidget);
+    return color != oldWidget.color;
+  }
 
-          Text("F"),
-          Radio<bool>(
-            groupValue: fOrC,
-            value: false,
-            onChanged: (v) {
-              setState(() {
-                fOrC = v;
-              });
-            },
-          ),
-          Text("C"),
-          Radio<bool>(
-            groupValue: fOrC,
-            value: true,
-            onChanged: (v) {
-              setState(() {
-                fOrC = v;
-              });
-            },
-          ),
-        ],
-      ),
-    );
+  static ColorState of(BuildContext context) {
+    print(context);
+    return context.inheritFromWidgetOfExactType(ColorState);
+  }
+}
 
-    Container calcBtn = Container(
-      child: RaisedButton(
-        child: Text("Calculate"),
-        onPressed: () {
-          setState(() {
-            !fOrC
-                ? output = (input - 32) * (5 / 9)
-                : output = (input * 9 / 5) + 32;
-          });
-          AlertDialog dialog = AlertDialog(
-              content: !fOrC
-                  ? Text(
-                  "${input.toStringAsFixed(2)} F: ${output.toStringAsFixed(
-                      2)} C ")
-                  : Text(
-                  "${output.toStringAsFixed(2)} F: ${input.toStringAsFixed(
-                      2)} C"));
-          showDialog(context: context, child: dialog);
-        },
-      ),
-    );
-
+class BoxTree extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     // TODO: implement build
     return Scaffold(
-      appBar: appBar,
-      body: Container(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: <Widget>[inputField, tempSwitch, calcBtn],
+      body: Center(
+        child: Row(
+          children: <Widget>[Box(), Box()],
         ),
+      ),
+    );
+  }
+}
+
+class Box extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    final colorState = ColorState.of(context);
+    return GestureDetector(
+      onTap: colorState.onTap,
+      onVerticalDragUpdate: (d) => print('drag vertial'),
+      onHorizontalDragUpdate: (d) => print('drag horizon'),
+      child: Container(
+        width: 50.0,
+        height: 50.0,
+        margin: EdgeInsets.only(left: 100.0),
+        color: colorState.color,
       ),
     );
   }
