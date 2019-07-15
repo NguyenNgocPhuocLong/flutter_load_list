@@ -72,3 +72,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+  assets:
+    - assets/pic-1.jpg
+    - assets/pic-2.jpg
+    - assets/pic-3.jpg
+    - assets/pic-4.jpg
