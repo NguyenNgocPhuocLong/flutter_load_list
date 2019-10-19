@@ -1,14 +1,21 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 
-void main() =>
-    runApp(MaterialApp(
-      title: "Gallery",
+void main() => runApp(MyApp());
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return MaterialApp(
+      title: "Calculator Layout",
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.blueGrey),
+      theme: ThemeData(
+        primarySwatch: Colors.blueGrey,
+      ),
       home: Calculator(),
-    ));
+    );
+  }
+}
 
 class MainState extends InheritedWidget {
   MainState({
@@ -33,70 +40,103 @@ class MainState extends InheritedWidget {
 
   @override
   bool updateShouldNotify(MainState oldWidget) {
-    // TODO: implement ==
     return inputValue != oldWidget.inputValue;
+  }
+}
+
+class CalcButton extends StatelessWidget {
+  CalcButton({this.keyValue});
+
+  final String keyValue;
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    final mainState = MainState.of(context);
+    return Expanded(
+      flex: 1,
+      child: FlatButton(
+        shape: Border.all(color: Colors.grey.withOpacity(0.5),
+            width: 2.0,
+            style: BorderStyle.solid),
+        color: Colors.white,
+        child: Text(
+          keyValue,
+          style: TextStyle(
+            fontWeight: FontWeight.normal,
+            fontSize: 30.0,
+            color: Colors.black54,
+            fontStyle: FontStyle.normal,
+          ),
+        ),
+        onPressed: () {
+          mainState.onPressed(keyValue);
+        },
+      ),
+    );
   }
 }
 
 class CalculatorLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     final mainState = MainState.of(context);
+    // TODO: implement build
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Calculator"),
-      ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.all(16.0),
-              color: Colors.blueGrey.withOpacity(0.85),
-              child: Row(
-                children: <Widget>[
-                  Text(
-                    mainState.inputValue,
-                    style: TextStyle(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 48.0),
-                  )
-                ],
+        appBar: AppBar(
+          title: Text("Calculator"),
+        ),
+        body: Column(
+          children: <Widget>[
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.all(16.0),
+                color: Colors.blueGrey.withOpacity(0.85),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    Text(
+                      mainState.inputValue ?? '0',
+                      style: TextStyle(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w400,
+                          fontSize: 30.0
+                      ),
+                    )
+                  ],
+                ),
               ),
             ),
-          ),
-          Expanded(
-            flex: 4,
-            child: Container(
-              child: Column(
-                children: <Widget>[
-                  makeBtns('C<%/'),
-                  makeBtns('789x'),
-                  makeBtns('456-'),
-                  makeBtns('123+'),
-                  makeBtns('_0.='),
-                ],
+            Expanded(
+              flex: 4,
+              child: Container(
+                child: Column(
+                  children: <Widget>[
+                    makeBtns('C<%/'),
+                    makeBtns('789x'),
+                    makeBtns('456-'),
+                    makeBtns('123+'),
+                    makeBtns('_0.='),
+                  ],
+                ),
               ),
-            ),
-          )
-        ],
-      ),
+            )
+          ],
+        )
     );
   }
 
+  //
   Widget makeBtns(String row) {
     List<String> token = row.split("");
     return Expanded(
       flex: 1,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: token
-            .map((f) =>
+        children: token.map((e) =>
             CalcButton(
-              keyValue: f == '_' ? "+/-" : e == '<' ? '<=' : e,
-            ))
-            .toList(),
+              keyValue: e == '_' ? "+/-" : e == '<' ? '<=' : e,
+            )).toList(),
       ),
     );
   }
@@ -105,6 +145,7 @@ class CalculatorLayout extends StatelessWidget {
 class Calculator extends StatefulWidget {
   @override
   CalcState createState() => CalcState();
+
 }
 
 class CalcState extends State<Calculator> {
@@ -126,7 +167,9 @@ class CalcState extends State<Calculator> {
         op = null;
         prevValue = 0.0;
         value = "";
-        setState(() => inputString = "");
+        setState(() {
+          inputString = "";
+        });
         break;
       case ".":
       case "%":
@@ -138,7 +181,7 @@ class CalcState extends State<Calculator> {
       case "-":
       case "/":
         op = keyvalue;
-        value = '';
+        value = "";
         prevValue = double.parse(inputString);
         setState(() {
           inputString = inputString + keyvalue;
@@ -175,11 +218,15 @@ class CalcState extends State<Calculator> {
       default:
         if (isNumber(keyvalue)) {
           if (op != null) {
-            setState(() => inputString = inputString + keyvalue);
-            value = value + keyvalue;
+            setState(() {
+              inputString += keyvalue;
+              value += keyvalue;
+            });
           } else {
-            setState(() => inputString = "" + keyvalue);
-            op = 'z';
+            setState(() {
+              inputString = "" + keyvalue;
+              op = 'z';
+            });
           }
         } else {
           onPressed(keyvalue);
@@ -191,45 +238,12 @@ class CalcState extends State<Calculator> {
   Widget build(BuildContext context) {
     // TODO: implement build
     return MainState(
-        inputValue: inputString,
-        prevValue: prevValue,
-        op: op,
-        onPressed: onPressed,
-        child: CalculatorLayout());
-  }
-}
-
-class CalcButton extends StatelessWidget {
-  CalcButton({this.keyValue});
-
-  final String keyValue;
-
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    final mainState = MainState.of(context);
-    return Expanded(
-      flex: 1,
-      child: FlatButton(
-        shape: Border.all(
-          color: Colors.grey.withOpacity(0.5),
-          width: 2.0,
-          style: BorderStyle.solid,
-        ),
-        color: Colors.white,
-        child: Text(
-          keyValue,
-          style: TextStyle(
-            fontWeight: FontWeight.normal,
-            fontSize: 36.0,
-            color: Colors.black54,
-            fontStyle: FontStyle.normal,
-          ),
-        ),
-        onPressed: () {
-          mainState.onPressed(keyValue);
-        },
-      ),
+      inputValue: inputString,
+      prevValue: prevValue,
+      value: value,
+      op: op,
+      onPressed: onPressed,
+      child: CalculatorLayout(),
     );
   }
 }
